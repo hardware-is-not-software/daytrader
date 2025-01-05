@@ -228,7 +228,7 @@ parser = argparse.ArgumentParser(
     description='''Stock trading strategy analyzer that compares DCA, Buy & Hold, and Dip-buying strategies.
     
 Example usage:
-    python daytrader.py --stock TSLA --stoploss -5 --tradecost 0.2
+    python daytrader.py --stock INTC --stoploss -5 --tradecost 0.2
     
 Parameters:
     --stock     : Stock ticker symbol (e.g., TSLA, AAPL, INTC)
@@ -238,7 +238,7 @@ Parameters:
     formatter_class=argparse.RawDescriptionHelpFormatter)
 
 parser.add_argument('--stock', type=str, required=True, 
-                   help='Stock ticker symbol (required). Example: TSLA')
+                   help='Stock ticker symbol (required). Example: INTC')
 parser.add_argument('--stoploss', type=float, required=True, 
                    help='Stop loss percentage as negative number (required). Example: -5')
 parser.add_argument('--tradecost', type=float, required=True,
@@ -250,7 +250,7 @@ try:
 except SystemExit as e:
     if str(e) != '0':  # When not --help
         print('''\nExample usage:
-    python daytrader.py --stock TSLA --stoploss -5 --tradecost 0.2
+    python daytrader.py --stock INTC --stoploss -5 --tradecost 0.2
     
 Required parameters:
     --stock     : Stock ticker symbol (e.g., TSLA, AAPL, INTC)
@@ -262,12 +262,12 @@ Required parameters:
 if args.stoploss >= 0:
     parser.error('''Stop loss must be a negative number.
 Example usage:
-    python daytrader.py --stock TSLA --stoploss -5 --tradecost 0.2''')
+    python daytrader.py --stock INTC --stoploss -5 --tradecost 0.2''')
 
 if args.tradecost <= 0:
     parser.error('''Trading cost must be a positive number.
 Example usage:
-    python daytrader.py --stock TSLA --stoploss -5 --tradecost 0.2''')
+    python daytrader.py --stock INTC --stoploss -5 --tradecost 0.2''')
 
 print(f"Analyzing {args.stock} with {abs(args.stoploss)}% stop loss and {args.tradecost}% trading cost...")
 
