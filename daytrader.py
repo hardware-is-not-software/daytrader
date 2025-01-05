@@ -6,6 +6,11 @@ import matplotlib.pyplot as plt
 import argparse
 import os
 import sys
+import json
+
+def store_facts_to_file(facts, filename='facts.json'):
+    with open(filename, 'w') as f:
+        json.dump(facts, f, indent=4)
 
 def save_to_csv(data, filename='stock_data.csv'):
     data.to_csv(filename)
@@ -413,10 +418,11 @@ if True:
     plt.savefig(f'plots/strategy_3d_{args.stock}.png')
     plt.close()
 
+    facts = ""
     # Print best results for each window
-    print("\nBest Strategy for Each Time Window:")
-    print("Days | Buy Trigger | Sell Trigger | Final Value  | vs Buy&Hold | vs DCA")
-    print("-" * 80)
+    facts += "\nBest Strategy for Each Time Window:\n"
+    facts += "Days | Buy Trigger | Sell Trigger | Final Value  | vs Buy&Hold | vs DCA\n"
+    facts += "-" * 80 + "\n"
     
     for days_window in [1, 2, 3, 4, 5]:
         window_results = results[results[:, 3] == days_window]
@@ -425,27 +431,27 @@ if True:
         
         vs_buyhold = ((best[2] - buyhold_final) / buyhold_final * 100)
         vs_dca = ((best[2] - dca_final) / dca_final * 100)
-        print(f"{int(best[3]):4d} | {best[0]:10.1f}% | {best[1]:11.1f}% | "
-              f"${best[2]:10,.2f} | {vs_buyhold:9.1f}% | {vs_dca:6.1f}%")
+        facts += f"{int(best[3]):4d} | {best[0]:10.1f}% | {best[1]:11.1f}% | "
+        facts += f"${best[2]:10,.2f} | {vs_buyhold:9.1f}% | {vs_dca:6.1f}%\n"
 
-# Find the best overall strategy across all time windows
-best_result = None
-best_value = 0
+    # Find the best overall strategy across all time windows
+    best_result = None
+    best_value = 0
 
-for days_window in [1, 2, 3, 4, 5]:
-    window_results = results[results[:, 3] == days_window]
-    best_idx = np.argmax(window_results[:, 2])
-    best = window_results[best_idx]
-    
-    if best[2] > best_value:
-        best_value = best[2]
-        best_result = [best[0], best[1], best[2], int(best[3])]  # buy_trigger, sell_trigger, final_value, days
+    for days_window in [1, 2, 3, 4, 5]:
+        window_results = results[results[:, 3] == days_window]
+        best_idx = np.argmax(window_results[:, 2])
+        best = window_results[best_idx]
+        
+        if best[2] > best_value:
+            best_value = best[2]
+            best_result = [best[0], best[1], best[2], int(best[3])]  # buy_trigger, sell_trigger, final_value, days
 
-print(f"\nBest Overall Strategy:")
-print(f"Time Window: {best_result[3]} days")
-print(f"Buy Trigger: {best_result[0]:.1f}%")
-print(f"Sell Trigger: {best_result[1]:.1f}%")  # Fixed format specifier
-print(f"Final Value: ${best_result[2]:,.2f}")
+    facts += f"\nBest Overall Strategy:\n"
+    facts += f"Time Window: {best_result[3]} days\n"
+    facts += f"Buy Trigger: {best_result[0]:.1f}%\n"
+    facts += f"Sell Trigger: {best_result[1]:.1f}%\n"
+    facts += f"Final Value: ${best_result[2]:,.2f}\n"
 
 def run_optimized_dip_strategy(data, buy_trigger, sell_trigger, days_window=1, investment_amount=10000, trading_cost=15):
     """Similar to run_dip_recovery_strategy but with configurable triggers and stop loss"""
@@ -645,3 +651,125 @@ print(f"\nCumulative Trading Costs:")
 print(f"Optimized Strategy: ${total_opt_cost:.2f}")
 print(f"Monthly DCA: ${total_dca_cost:.2f}")
 print(f"Buy & Hold: ${total_hold_cost:.2f}")
+
+facts += f"\nResults Comparison:\n"
+facts += "==================\n"
+
+facts += f"\nOptimized {best_result[3]}-Day Dip Strategy (Buy: {best_result[0]:.1f}%, Sell: {best_result[1]:.1f}%):\n"
+facts += f"Final value: ${optimized_final_value:.2f}\n"
+facts += f"Total return: {((optimized_final_value - 10000) / 10000 * 100):.2f}%\n"
+if len(optimized_trades) > 0:
+    facts += f"Number of trades: {len(optimized_trades)}\n"
+    facts += f"Total trading costs: ${len(optimized_trades) * 15}\n"
+    
+    # Calculate win rate for completed trades
+    profitable_trades = optimized_trades[optimized_trades['action'] == 'SELL']
+    if len(profitable_trades) > 0:
+        win_rate = (profitable_trades['profit'] > 0).mean() * 100
+        facts += f"Win rate: {win_rate:.1f}%\n"
+        facts += f"Average profit per trade: ${profitable_trades['profit'].mean():.2f}\n"
+
+facts += f"\nWorst {worst_result[3]}-Day Dip Strategy (Buy: {worst_result[0]:.1f}%, Sell: {worst_result[1]:.1f}%):\n"
+facts += f"Final value: ${worst_final_value:.2f}\n"
+facts += f"Total return: {((worst_final_value - 10000) / 10000 * 100):.2f}%\n"
+if len(worst_trades) > 0:
+    facts += f"Number of trades: {len(worst_trades)}\n"
+    facts += f"Total trading costs: ${worst_trades['trading_cost'].sum():.2f}\n"
+
+facts += f"\nMonthly DCA Strategy:\n"
+facts += f"Final value: ${dca_final_value:.2f}\n"
+facts += f"Total return: {((dca_final_value - 10000) / 10000 * 100):.2f}%\n"
+facts += f"Number of investments: {len(dca_trades)}\n"
+facts += f"Total trading costs: ${len(dca_trades) * 15}\n"
+
+facts += f"\nBuy & Hold Strategy:\n"
+facts += f"Final value: ${hold_final_value:.2f}\n"
+facts += f"Total return: {((hold_final_value - 10000) / 10000 * 100):.2f}%\n"
+facts += f"Number of trades: 1\n"
+facts += f"Total trading costs: $15\n"
+
+# Update drawdown calculation
+facts += f"\nMaximum Drawdown:\n"
+facts += f"Optimized Dip Strategy: {calculate_max_drawdown(optimized_values['value']):.2f}%\n"
+facts += f"Monthly DCA: {calculate_max_drawdown(dca_values['value']):.2f}%\n"
+facts += f"Buy & Hold: {calculate_max_drawdown(hold_values['value']):.2f}%\n"
+
+# Add cumulative trading costs summary
+facts += f"\nCumulative Trading Costs:\n"
+facts += f"Optimized Strategy: ${total_opt_cost:.2f}\n"
+facts += f"Monthly DCA: ${total_dca_cost:.2f}\n"
+facts += f"Buy & Hold: ${total_hold_cost:.2f}\n"
+
+facts_dict = {
+    "best_strategy_each_window": [],
+    "best_overall_strategy": {},
+    "results_comparison": {},
+    "maximum_drawdown": {},
+    "cumulative_trading_costs": {}
+    }
+    
+for days_window in [1, 2, 3, 4, 5]:
+    window_results = results[results[:, 3] == days_window]
+    best_idx = np.argmax(window_results[:, 2])
+    best = window_results[best_idx]
+    
+    vs_buyhold = ((best[2] - buyhold_final) / buyhold_final * 100)
+    vs_dca = ((best[2] - dca_final) / dca_final * 100)
+    facts_dict["best_strategy_each_window"].append({
+        "days": int(best[3]),
+        "buy_trigger": best[0],
+        "sell_trigger": best[1],
+        "final_value": best[2],
+        "vs_buyhold": vs_buyhold,
+        "vs_dca": vs_dca
+    })
+
+    facts_dict["best_overall_strategy"] = {
+        "time_window": best_result[3],
+        "buy_trigger": best_result[0],
+        "sell_trigger": best_result[1],
+        "final_value": best_result[2]
+    }
+    
+    facts_dict["results_comparison"] = {
+        "optimized_dip_strategy": {
+            "final_value": optimized_final_value,
+            "total_return": ((optimized_final_value - 10000) / 10000 * 100),
+            "number_of_trades": len(optimized_trades),
+            "total_trading_costs": len(optimized_trades) * 15,
+            "win_rate": (profitable_trades['profit'] > 0).mean() * 100 if len(profitable_trades) > 0 else None,
+            "average_profit_per_trade": profitable_trades['profit'].mean() if len(profitable_trades) > 0 else None
+        },
+        "worst_dip_strategy": {
+            "final_value": worst_final_value,
+            "total_return": ((worst_final_value - 10000) / 10000 * 100),
+            "number_of_trades": len(worst_trades),
+            "total_trading_costs": worst_trades['trading_cost'].sum()
+        },
+        "monthly_dca_strategy": {
+            "final_value": dca_final_value,
+            "total_return": ((dca_final_value - 10000) / 10000 * 100),
+            "number_of_investments": len(dca_trades),
+            "total_trading_costs": len(dca_trades) * 15
+        },
+        "buy_and_hold_strategy": {
+            "final_value": hold_final_value,
+            "total_return": ((hold_final_value - 10000) / 10000 * 100),
+            "number_of_trades": 1,
+            "total_trading_costs": 15
+        }
+    }
+    
+    facts_dict["maximum_drawdown"] = {
+        "optimized_dip_strategy": calculate_max_drawdown(optimized_values['value']),
+        "monthly_dca": calculate_max_drawdown(dca_values['value']),
+        "buy_and_hold": calculate_max_drawdown(hold_values['value'])
+    }
+    
+    facts_dict["cumulative_trading_costs"] = {
+        "optimized_strategy": total_opt_cost,
+        "monthly_dca": total_dca_cost,
+        "buy_and_hold": total_hold_cost
+    }
+
+    store_facts_to_file(facts_dict)
