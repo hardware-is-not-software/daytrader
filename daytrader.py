@@ -410,7 +410,8 @@ if True:
     ax.legend(title='Drop Window Duration')
     
     plt.tight_layout()
-    plt.show()
+    plt.savefig(f'plots/strategy_3d_{args.stock}.png')
+    plt.close()
 
     # Print best results for each window
     print("\nBest Strategy for Each Time Window:")
@@ -589,7 +590,8 @@ plt.legend()
 plt.grid(True)
 plt.xticks(rotation=45)
 plt.tight_layout()
-plt.show()
+plt.savefig(f'plots/strategy_timedomain_{args.stock}.png')
+plt.close()
 
 # Print results
 print("\nResults Comparison:")
