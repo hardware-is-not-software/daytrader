@@ -229,11 +229,11 @@ parser = argparse.ArgumentParser(
     description='''Stock trading strategy analyzer that compares DCA, Buy & Hold, and Dip-buying strategies.
     
 Example usage:
-    python daytrader.py --stock INTC --stoploss -5 --tradecost 0.2
+    python daytrader.py --stock INTC --stoploss -15 --tradecost 0.2
     
 Parameters:
     --stock     : Stock ticker symbol (e.g., TSLA, AAPL, INTC)
-    --stoploss  : Stop loss percentage as negative number (e.g., -5 for 5%)
+    --stoploss  : Stop loss percentage as negative number (e.g., -15 for 15%)
     --tradecost : Trading cost as percentage (e.g., 0.2 for 0.2%)
 ''',
     formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -241,12 +241,12 @@ Parameters:
 parser.add_argument('--stock', type=str, required=True, 
                    help='Stock ticker symbol (required). Example: INTC')
 parser.add_argument('--stoploss', type=float, required=True, 
-                   help='Stop loss percentage as negative number (required). Example: -5')
+                   help='Stop loss percentage as negative number (required). Example: -15')
 parser.add_argument('--tradecost', type=float, required=True,
                    help='Trading cost as percentage (required). Example: 0.2')
-parser.add_argument('--max_buytrigger', type=float, default=4.0,
+parser.add_argument('--max_buytrigger', type=float, default=5.0,
                    help='Maximum buy trigger percentage (positive). Default: 4.0')
-parser.add_argument('--max_selltrigger', type=float, default=4.0,
+parser.add_argument('--max_selltrigger', type=float, default=5.0,
                    help='Maximum sell trigger percentage (positive). Default: 4.0')
 parser.add_argument('--trigger_resolution', type=float, default=0.5,
                    help='Step size between trigger values. Default: 0.5')
@@ -257,11 +257,11 @@ try:
 except SystemExit as e:
     if str(e) != '0':  # When not --help
         print('''\nExample usage:
-    python daytrader.py --stock INTC --stoploss -5 --tradecost 0.2
+    python daytrader.py --stock INTC --stoploss -15 --tradecost 0.2
     
 Required parameters:
     --stock     : Stock ticker symbol (e.g., TSLA, AAPL, INTC)
-    --stoploss  : Stop loss percentage as negative number (e.g., -5 for 5%)
+    --stoploss  : Stop loss percentage as negative number (e.g., -15 for 15%)
     --tradecost : Trading cost as percentage (e.g., 0.2 for 0.2%)\n''')
     raise
 
