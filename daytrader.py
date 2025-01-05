@@ -505,7 +505,7 @@ def run_optimized_dip_strategy(data, buy_trigger, sell_trigger, days_window=1, i
                     'return': current_return,
                     'stop_loss_triggered': current_return <= args.stoploss
                 })
-                print(f"OPTIMIZED SELL: {index.date()}, Price: ${current_price:.2f}, Return: {current_return:.1f}%, Profit: ${profit:.2f}, Cost: ${trading_cost:.2f}")
+                print(f"OPTIMIZED SELL: {index.date()}, Price: ${current_price:.2f}, Return: {current_return:.1f}%, Profit: ${profit:.2f}, Cost: ${trading_cost:.2f}, Stop Loss: {current_return <= args.stoploss}")
                 shares = 0
                 entry_price = None
     
@@ -569,6 +569,12 @@ if len(optimized_trades) > 0:
     if not opt_sell_trades.empty:
         plt.scatter(opt_sell_trades['date'], opt_sell_trades['value'], 
                    color='magenta', marker='v', s=100, label='Sell', zorder=5)
+        
+        # Mark stop loss events
+        stop_loss_trades = opt_sell_trades[opt_sell_trades['stop_loss_triggered'] == True]
+        if not stop_loss_trades.empty:
+            plt.scatter(stop_loss_trades['date'], stop_loss_trades['value'],
+                       color='black', marker='x', s=100, label='Stop Loss', zorder=6)
 
 # Add DCA transaction markers
 if len(dca_trades) > 0:
