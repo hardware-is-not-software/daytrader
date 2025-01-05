@@ -701,12 +701,16 @@ facts += f"Monthly DCA: ${total_dca_cost:.2f}\n"
 facts += f"Buy & Hold: ${total_hold_cost:.2f}\n"
 
 facts_dict = {
+    "parameters": {},
     "best_strategy_each_window": [],
     "best_overall_strategy": {},
     "results_comparison": {},
     "maximum_drawdown": {},
     "cumulative_trading_costs": {}
-    }
+}
+    
+for arg_name, arg_value in vars(args).items():
+    facts_dict["parameters"][arg_name] = arg_value
     
 for days_window in [1, 2, 3, 4, 5]:
     window_results = results[results[:, 3] == days_window]
