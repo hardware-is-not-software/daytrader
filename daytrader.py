@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
 import argparse
 import os
+import sys
 
 def save_to_csv(data, filename='stock_data.csv'):
     data.to_csv(filename)
@@ -21,9 +22,33 @@ def get_csv_filename(ticker):
 def get_daily_data():
     end_date = datetime.now()
     start_date = end_date - timedelta(days=730)
-    ticker = yf.Ticker(args.stock)
-    data = ticker.history(start=start_date, end=end_date, interval="1d")
-    return data
+    try:
+        ticker = yf.Ticker(args.stock)
+        data = ticker.history(start=start_date, end=end_date, interval="1d")
+        if len(data) == 0:
+            print(f"\nError: No data found for ticker '{args.stock}'")
+            print("Please verify the stock symbol is correct (e.g., AAPL, MSFT, GOOGL)")
+            sys.exit(1)
+        return data
+    except Exception as e:
+        print(f"\nError: Failed to fetch data for ticker '{args.stock}'")
+        print("Please verify the stock symbol is correct (e.g., AAPL, MSFT, GOOGL)")
+        print(f"Error details: {str(e)}")
+        sys.exit(1)
+
+def validate_data(data):
+    """Validate that we have proper stock data"""
+    if data is None or len(data) == 0:
+        print(f"\nError: No valid data found for ticker '{args.stock}'")
+        print("Please delete the CSV file and try again to fetch fresh data.")
+        sys.exit(1)
+    
+    required_columns = ['Open', 'High', 'Low', 'Close', 'Volume']
+    missing_columns = [col for col in required_columns if col not in data.columns]
+    if missing_columns:
+        print(f"\nError: Missing required columns in data: {missing_columns}")
+        print("Please delete the CSV file and try again to fetch fresh data.")
+        sys.exit(1)
 
 def run_monthly_dca_strategy(data, monthly_investment=1000, max_investment=10000):
     df = data.copy()
@@ -282,10 +307,18 @@ print(f"Analyzing {args.stock} with {abs(args.stoploss)}% stop loss and {args.tr
 csv_filename = get_csv_filename(args.stock)
 if os.path.exists(csv_filename):
     print(f"Loading existing data for {args.stock} from {csv_filename}")
-    data = pd.read_csv(csv_filename, index_col=0, parse_dates=True)
+    try:
+        data = pd.read_csv(csv_filename, index_col=0, parse_dates=True)
+        validate_data(data)
+    except Exception as e:
+        print(f"\nError: Failed to load data from {csv_filename}")
+        print(f"Error details: {str(e)}")
+        print("Please delete the CSV file and try again to fetch fresh data.")
+        sys.exit(1)
 else:
     print(f"Fetching daily data for {args.stock}...")
     data = get_daily_data()
+    validate_data(data)
     data.to_csv(csv_filename)
 
 print("Running strategies...")
