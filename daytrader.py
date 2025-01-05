@@ -292,6 +292,10 @@ if True:
     _, buyhold_final, _ = run_buy_and_hold_strategy(data)
     _, dca_final, _ = run_monthly_dca_strategy(data)
     
+    # Find best and worst values before plotting
+    best_value = np.max(results[:, 2])
+    worst_value = np.min(results[:, 2])
+    
     # Create single 3D plot with all time windows
     fig = plt.figure(figsize=(15, 10))
     ax = fig.add_subplot(111, projection='3d')
@@ -332,25 +336,32 @@ if True:
     ax.plot_surface(X, Y, Z_dca, alpha=0.3, color='green', 
                    label='DCA', shade=False)
     
-    # Add clear text annotations for reference values
-    ax.text(min(x), max(y), buyhold_final * 1.02, 
+    # Add clear text annotations for all reference values
+    text_y_positions = np.linspace(max(y), max(y) - 0.5, 4)  # Space out annotations
+    ax.text(min(x), text_y_positions[0], buyhold_final * 1.02, 
             f'Buy & Hold\n${buyhold_final:,.2f}', 
             color='red', fontsize=10, fontweight='bold')
-    ax.text(min(x), max(y), dca_final * 1.02, 
+    ax.text(min(x), text_y_positions[1], dca_final * 1.02, 
             f'DCA\n${dca_final:,.2f}', 
             color='green', fontsize=10, fontweight='bold')
+    ax.text(min(x), text_y_positions[2], best_value * 1.02, 
+            f'Best Dip\n${best_value:,.2f}', 
+            color='purple', fontsize=10, fontweight='bold')
+    ax.text(min(x), text_y_positions[3], worst_value * 1.02, 
+            f'Worst Dip\n${worst_value:,.2f}', 
+            color='orange', fontsize=10, fontweight='bold')
     
     # Add horizontal grid lines at reference values
-    for ref_value in [buyhold_final, dca_final]:
+    for ref_value in [buyhold_final, dca_final, best_value, worst_value]:
         ax.plot([min(x), max(x)], [min(y), max(y)], [ref_value, ref_value], 
                 'k--', alpha=0.3, linewidth=1)
     
-    # Customize the plot
+    # Customize the plot with single-line title but add empty line first
     ax.set_xlabel('Buy Trigger (%)', labelpad=10)
     ax.set_ylabel('Sell Trigger (%)', labelpad=10)
     ax.set_zlabel('Final Value ($)', labelpad=10)
-    ax.set_title('Strategy Performance Comparison\nAcross Different Price Drop Windows', 
-                pad=20, size=14)
+    ax.set_title(f'\nStrategy Performance Comparison - {args.stock} ({abs(args.stoploss)}% Stop Loss, {args.tradecost}% Trading Cost)', 
+                pad=40, size=14)
     
     # Rotate the view for better visualization
     ax.view_init(elev=20, azim=45)
@@ -471,11 +482,35 @@ optimized_trades, optimized_final_value, optimized_values = run_optimized_dip_st
 )
 hold_trades, hold_final_value, hold_values = run_buy_and_hold_strategy(data)
 
+# Before creating fig2, find worst performing strategy
+worst_result = None
+worst_value = float('inf')
+
+for days_window in [1, 2, 3, 4, 5]:
+    window_results = results[results[:, 3] == days_window]
+    worst_idx = np.argmin(window_results[:, 2])
+    worst = window_results[worst_idx]
+    
+    if worst[2] < worst_value:
+        worst_value = worst[2]
+        worst_result = [worst[0], worst[1], worst[2], int(worst[3])]
+
+# Run worst strategy
+worst_trades, worst_final_value, worst_values = run_optimized_dip_strategy(
+    data, 
+    buy_trigger=worst_result[0],
+    sell_trigger=worst_result[1],
+    days_window=worst_result[3]
+)
+
 # Update the strategy comparison plot section
 fig2 = plt.figure(figsize=(15, 7))
 plt.plot(optimized_values['date'], optimized_values['value'], 
          label=f'Optimized {best_result[3]}-Day Dip Strategy ({best_result[0]:.1f}%/{best_result[1]:.1f}%) - {args.tradecost}% per trade', 
          color='purple')
+plt.plot(worst_values['date'], worst_values['value'], 
+         label=f'Worst {worst_result[3]}-Day Strategy ({worst_result[0]:.1f}%/{worst_result[1]:.1f}%)', 
+         color='orange', linestyle='--')
 plt.plot(dca_values['date'], dca_values['value'], 
          label=f'Monthly DCA - {args.tradecost}% per trade', 
          color='green')
@@ -527,6 +562,13 @@ if len(optimized_trades) > 0:
         win_rate = (profitable_trades['profit'] > 0).mean() * 100
         print(f"Win rate: {win_rate:.1f}%")
         print(f"Average profit per trade: ${profitable_trades['profit'].mean():.2f}")
+
+print(f"\nWorst {worst_result[3]}-Day Dip Strategy (Buy: {worst_result[0]:.1f}%, Sell: {worst_result[1]:.1f}%):")
+print(f"Final value: ${worst_final_value:.2f}")
+print(f"Total return: {((worst_final_value - 10000) / 10000 * 100):.2f}%")
+if len(worst_trades) > 0:
+    print(f"Number of trades: {len(worst_trades)}")
+    print(f"Total trading costs: ${worst_trades['trading_cost'].sum():.2f}")
 
 print(f"\nMonthly DCA Strategy:")
 print(f"Final value: ${dca_final_value:.2f}")
