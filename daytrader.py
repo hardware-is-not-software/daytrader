@@ -52,7 +52,8 @@ def run_monthly_dca_strategy(data, monthly_investment=1000, max_investment=10000
             # Only invest if we haven't reached max investment
             if total_invested < max_investment:
                 investment = min(monthly_investment, cash)
-                shares_to_buy = (investment - 15) / current_price
+                trading_cost = investment * (args.tradecost / 100)
+                shares_to_buy = (investment - trading_cost) / current_price
                 shares += shares_to_buy
                 cash -= investment
                 total_invested += investment
@@ -64,15 +65,16 @@ def run_monthly_dca_strategy(data, monthly_investment=1000, max_investment=10000
                     'price': current_price,
                     'shares': shares_to_buy,
                     'invested': investment,
+                    'trading_cost': trading_cost,
                     'total_invested': total_invested,
                     'portfolio_value': current_value
                 })
-                print(f"DCA BUY: {index.date()}, Price: ${current_price:.2f}, Shares: {shares_to_buy:.2f}")
+                print(f"DCA BUY: {index.date()}, Price: ${current_price:.2f}, Shares: {shares_to_buy:.2f}, Cost: ${trading_cost:.2f}")
     
     final_value = shares * df['Close'].iloc[-1]
     return pd.DataFrame(trades), final_value, pd.DataFrame(portfolio_values)
 
-def run_dip_recovery_strategy(data, investment_amount=10000, trading_cost=15):
+def run_dip_recovery_strategy(data, investment_amount=10000):
     df = data.copy()
     df['daily_open'] = df['Open']
     df['intraday_return'] = ((df['Close'] - df['Open']) / df['Open']) * 100
@@ -94,6 +96,7 @@ def run_dip_recovery_strategy(data, investment_amount=10000, trading_cost=15):
         
         # Buy condition: 2% drop from daily open
         if shares == 0 and row['intraday_return'] <= -2:
+            trading_cost = investment_amount * (args.tradecost / 100)
             shares_to_buy = (investment_amount - trading_cost) / current_price
             if shares_to_buy > 0:
                 shares = shares_to_buy
@@ -105,32 +108,37 @@ def run_dip_recovery_strategy(data, investment_amount=10000, trading_cost=15):
                     'price': current_price,
                     'shares': shares,
                     'value': cash + shares * current_price,
+                    'trading_cost': trading_cost,
                     'return': row['intraday_return']
                 })
-                print(f"BUY: {index.date()}, Price: ${current_price:.2f}, Drop: {row['intraday_return']:.1f}%")
+                print(f"BUY: {index.date()}, Price: ${current_price:.2f}, Drop: {row['intraday_return']:.1f}%, Cost: ${trading_cost:.2f}")
         
         # Sell condition: price recovered to or above entry price
         elif shares > 0 and current_price >= entry_price:
-            profit = (current_price - (entry_price)) * shares - (2 * trading_cost)
-            cash += (shares * current_price - trading_cost)
+            sell_value = shares * current_price
+            trading_cost = sell_value * (args.tradecost / 100)
+            profit = (current_price - entry_price) * shares - trading_cost
+            cash += (sell_value - trading_cost)
             trades.append({
                 'date': index,
                 'action': 'SELL',
                 'price': current_price,
                 'shares': shares,
                 'value': cash,
+                'trading_cost': trading_cost,
                 'profit': profit
             })
-            print(f"SELL: {index.date()}, Price: ${current_price:.2f}, Profit: ${profit:.2f}")
+            print(f"SELL: {index.date()}, Price: ${current_price:.2f}, Profit: ${profit:.2f}, Cost: ${trading_cost:.2f}")
             shares = 0
             entry_price = None
     
     final_value = cash + (shares * df['Close'].iloc[-1])
     return pd.DataFrame(trades), final_value, pd.DataFrame(portfolio_values)
 
-def run_buy_and_hold_strategy(data, investment_amount=10000, trading_cost=15):
+def run_buy_and_hold_strategy(data, investment_amount=10000):
     df = data.copy()
     initial_price = df['Close'].iloc[0]
+    trading_cost = investment_amount * (args.tradecost / 100)
     shares = (investment_amount - trading_cost) / initial_price
     portfolio_values = []
     
@@ -141,6 +149,7 @@ def run_buy_and_hold_strategy(data, investment_amount=10000, trading_cost=15):
         'price': initial_price,
         'shares': shares,
         'value': investment_amount,
+        'trading_cost': trading_cost,
         'portfolio_value': investment_amount
     }]
     
@@ -215,17 +224,52 @@ def find_best_parameters(results):
     return results[best_idx]
 
 # Replace the argument parser section with:
-parser = argparse.ArgumentParser(description='Stock trading strategy analyzer')
-parser.add_argument('--stock', type=str, required=True, help='Stock ticker symbol (required)')
-parser.add_argument('--stoploss', type=float, required=True, help='Stop loss percentage (negative number, required)')
+parser = argparse.ArgumentParser(
+    description='''Stock trading strategy analyzer that compares DCA, Buy & Hold, and Dip-buying strategies.
+    
+Example usage:
+    python daytrader.py --stock TSLA --stoploss -5 --tradecost 0.2
+    
+Parameters:
+    --stock     : Stock ticker symbol (e.g., TSLA, AAPL, INTC)
+    --stoploss  : Stop loss percentage as negative number (e.g., -5 for 5%)
+    --tradecost : Trading cost as percentage (e.g., 0.2 for 0.2%)
+''',
+    formatter_class=argparse.RawDescriptionHelpFormatter)
 
-args = parser.parse_args()
+parser.add_argument('--stock', type=str, required=True, 
+                   help='Stock ticker symbol (required). Example: TSLA')
+parser.add_argument('--stoploss', type=float, required=True, 
+                   help='Stop loss percentage as negative number (required). Example: -5')
+parser.add_argument('--tradecost', type=float, required=True,
+                   help='Trading cost as percentage (required). Example: 0.2')
 
-# Validate stop loss is negative
+# Replace the argument parsing section with try-except block
+try:
+    args = parser.parse_args()
+except SystemExit as e:
+    if str(e) != '0':  # When not --help
+        print('''\nExample usage:
+    python daytrader.py --stock TSLA --stoploss -5 --tradecost 0.2
+    
+Required parameters:
+    --stock     : Stock ticker symbol (e.g., TSLA, AAPL, INTC)
+    --stoploss  : Stop loss percentage as negative number (e.g., -5 for 5%)
+    --tradecost : Trading cost as percentage (e.g., 0.2 for 0.2%)\n''')
+    raise
+
+# Enhanced error messages
 if args.stoploss >= 0:
-    parser.error("Stop loss must be a negative number (e.g., -5 for 5% loss)")
+    parser.error('''Stop loss must be a negative number.
+Example usage:
+    python daytrader.py --stock TSLA --stoploss -5 --tradecost 0.2''')
 
-print(f"Analyzing {args.stock} with {abs(args.stoploss)}% stop loss...")
+if args.tradecost <= 0:
+    parser.error('''Trading cost must be a positive number.
+Example usage:
+    python daytrader.py --stock TSLA --stoploss -5 --tradecost 0.2''')
+
+print(f"Analyzing {args.stock} with {abs(args.stoploss)}% stop loss and {args.tradecost}% trading cost...")
 
 # Get data and run strategies
 csv_filename = get_csv_filename(args.stock)
@@ -374,6 +418,7 @@ def run_optimized_dip_strategy(data, buy_trigger, sell_trigger, days_window=1, i
         
         # Buy condition
         if shares == 0 and not pd.isna(row['price_change']) and row['price_change'] <= buy_trigger:
+            trading_cost = investment_amount * (args.tradecost / 100)
             shares_to_buy = (investment_amount - trading_cost) / current_price
             if shares_to_buy > 0:
                 shares = shares_to_buy
@@ -385,27 +430,31 @@ def run_optimized_dip_strategy(data, buy_trigger, sell_trigger, days_window=1, i
                     'price': current_price,
                     'shares': shares,
                     'value': cash + shares * current_price,
+                    'trading_cost': trading_cost,
                     'return': row['price_change']
                 })
-                print(f"OPTIMIZED BUY ({days_window}-day drop): {index.date()}, Price: ${current_price:.2f}, Drop: {row['price_change']:.1f}%")
+                print(f"OPTIMIZED BUY ({days_window}-day drop): {index.date()}, Price: ${current_price:.2f}, Drop: {row['price_change']:.1f}%, Cost: ${trading_cost:.2f}")
         
         # Sell conditions: target reached or stop loss hit
         elif shares > 0:
             current_return = ((current_price - entry_price) / entry_price) * 100
             if current_return >= sell_trigger or current_return <= args.stoploss:
-                profit = (current_price - entry_price) * shares - (2 * trading_cost)
-                cash += (shares * current_price - trading_cost)
+                sell_value = shares * current_price
+                trading_cost = sell_value * (args.tradecost / 100)
+                profit = (current_price - entry_price) * shares - trading_cost
+                cash += (sell_value - trading_cost)
                 trades.append({
                     'date': index,
                     'action': 'SELL',
                     'price': current_price,
                     'shares': shares,
                     'value': cash,
+                    'trading_cost': trading_cost,
                     'profit': profit,
                     'return': current_return,
                     'stop_loss_triggered': current_return <= args.stoploss
                 })
-                print(f"OPTIMIZED SELL: {index.date()}, Price: ${current_price:.2f}, Return: {current_return:.1f}%, Profit: ${profit:.2f}")
+                print(f"OPTIMIZED SELL: {index.date()}, Price: ${current_price:.2f}, Return: {current_return:.1f}%, Profit: ${profit:.2f}, Cost: ${trading_cost:.2f}")
                 shares = 0
                 entry_price = None
     
@@ -422,13 +471,17 @@ optimized_trades, optimized_final_value, optimized_values = run_optimized_dip_st
 )
 hold_trades, hold_final_value, hold_values = run_buy_and_hold_strategy(data)
 
-# Create strategy comparison plot
+# Update the strategy comparison plot section
 fig2 = plt.figure(figsize=(15, 7))
 plt.plot(optimized_values['date'], optimized_values['value'], 
-         label=f'Optimized {best_result[3]}-Day Dip Strategy ({best_result[0]:.1f}%/{best_result[1]:.1f}%)', 
+         label=f'Optimized {best_result[3]}-Day Dip Strategy ({best_result[0]:.1f}%/{best_result[1]:.1f}%) - {args.tradecost}% per trade', 
          color='purple')
-plt.plot(dca_values['date'], dca_values['value'], label='Monthly DCA', color='green')
-plt.plot(hold_values['date'], hold_values['value'], label='Buy & Hold', color='red')
+plt.plot(dca_values['date'], dca_values['value'], 
+         label=f'Monthly DCA - {args.tradecost}% per trade', 
+         color='green')
+plt.plot(hold_values['date'], hold_values['value'], 
+         label=f'Buy & Hold - {args.tradecost}% once', 
+         color='red')
 
 # Add optimized strategy transaction markers
 if len(optimized_trades) > 0:
@@ -447,8 +500,8 @@ if len(dca_trades) > 0:
     plt.scatter(dca_trades['date'], dca_trades['portfolio_value'], 
                color='green', marker='*', s=100, label='DCA Buy', zorder=5)
 
-# Update title to include stock symbol and stop loss
-plt.title(f'{args.stock} Strategy Comparison (Stop Loss: {args.stoploss}%)')
+# Update title to include stock symbol, stop loss and trading cost
+plt.title(f'{args.stock} Strategy Comparison\nStop Loss: {args.stoploss}% | Trading Cost: {args.tradecost}%')
 plt.xlabel('Date')
 plt.ylabel('Portfolio Value ($)')
 plt.legend()
@@ -491,4 +544,14 @@ print(f"Total trading costs: $15")
 print(f"\nMaximum Drawdown:")
 print(f"Optimized Dip Strategy: {calculate_max_drawdown(optimized_values['value']):.2f}%")
 print(f"Monthly DCA: {calculate_max_drawdown(dca_values['value']):.2f}%")
-print(f"Buy & Hold: {calculate_max_drawdown(hold_values['value']):.2f}%")
+print(f"Buy & Hold: {calculate_max_drawdown(hold_values['value']):.2f}%")  # Fixed format specifier
+
+# Add cumulative trading costs summary
+total_opt_cost = optimized_trades['trading_cost'].sum() if len(optimized_trades) > 0 else 0
+total_dca_cost = dca_trades['trading_cost'].sum() if len(dca_trades) > 0 else 0
+total_hold_cost = hold_trades['trading_cost'].sum() if len(hold_trades) > 0 else 0
+
+print(f"\nCumulative Trading Costs:")
+print(f"Optimized Strategy: ${total_opt_cost:.2f}")
+print(f"Monthly DCA: ${total_dca_cost:.2f}")
+print(f"Buy & Hold: ${total_hold_cost:.2f}")
