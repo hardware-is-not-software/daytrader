@@ -205,8 +205,9 @@ def run_strategy_with_parameters(data, buy_trigger, sell_trigger, days_window=1,
     return final_value
 
 def create_3d_analysis(data):
-    buy_triggers = [-1.5, -2.0, -2.5, -3.0]
-    sell_triggers = [1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0]
+    # Generate trigger ranges based on command line parameters
+    buy_triggers = np.arange(-args.trigger_resolution, -args.max_buytrigger - args.trigger_resolution, -args.trigger_resolution)
+    sell_triggers = np.arange(args.trigger_resolution, args.max_selltrigger + args.trigger_resolution, args.trigger_resolution)
     days_windows = [1, 2, 3, 4, 5]
     
     results = []
@@ -243,6 +244,12 @@ parser.add_argument('--stoploss', type=float, required=True,
                    help='Stop loss percentage as negative number (required). Example: -5')
 parser.add_argument('--tradecost', type=float, required=True,
                    help='Trading cost as percentage (required). Example: 0.2')
+parser.add_argument('--max_buytrigger', type=float, default=4.0,
+                   help='Maximum buy trigger percentage (positive). Default: 4.0')
+parser.add_argument('--max_selltrigger', type=float, default=4.0,
+                   help='Maximum sell trigger percentage (positive). Default: 4.0')
+parser.add_argument('--trigger_resolution', type=float, default=0.5,
+                   help='Step size between trigger values. Default: 0.5')
 
 # Replace the argument parsing section with try-except block
 try:
