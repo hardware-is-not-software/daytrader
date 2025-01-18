@@ -1,3 +1,5 @@
+# Setup
+
 git clone https://github.com/hardware-is-not-software/daytrader.git
 
 // Install Python and preferably virtual enviroment as miniconda

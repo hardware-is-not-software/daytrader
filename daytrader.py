@@ -131,7 +131,7 @@ def main():
             results, bh_final, dca_final,
             stock, args.stoploss, args.tradecost, company_name
         )
-        
+            
         create_strategy_comparison_plot(
             optimized_values, worst_values, dca_values, bh_values,
             optimized_trades, dca_trades,
@@ -234,22 +234,23 @@ def main():
             
             # Create plots
             print("\nGenerating plots...")
+            company_name = get_company_name(stock)
             create_3d_strategy_plot(
                 results, bh_final, dca_final,
-                stock, args.stoploss, args.tradecost
+                stock, args.stoploss, args.tradecost, company_name
             )
             
-            create_strategy_comparison_plot(
-                optimized_values, worst_values, dca_values, bh_values,
-                optimized_trades, dca_trades,
-                stock, args.stoploss, args.tradecost,
-                int(best_days), best_buy, best_sell
-            )
-            
-            # Store analysis results
-            company_name = get_company_name(stock)
-            store_analysis_results(args, dca_final, dca_values, dip_final, dip_values, bh_final, bh_values, best_value, best_buy, best_sell, best_days, optimized_trades, dip_trades, bh_trades, dca_trades, stock, company_name)
-            print(f"\nAnalysis complete. Check the 'results/{stock}' directory for visualizations and data.")
+        create_strategy_comparison_plot(
+            optimized_values, worst_values, dca_values, bh_values,
+            optimized_trades, dca_trades,
+            stock, args.stoploss, args.tradecost,
+            int(best_days), best_buy, best_sell, company_name
+        )
+        
+        # Store analysis results
+        company_name = get_company_name(stock)
+        store_analysis_results(args, dca_final, dca_values, dip_final, dip_values, bh_final, bh_values, best_value, best_buy, best_sell, best_days, optimized_trades, dip_trades, bh_trades, dca_trades, stock, company_name)
+        print(f"\nAnalysis complete. Check the 'results/{stock}' directory for visualizations and data.")
     else:
         print("Please provide a ticker using --ticker or a stock list using --stocklist")
         sys.exit(1)
