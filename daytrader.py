@@ -1,6 +1,7 @@
 import argparse
 import sys
 import os
+import pandas as pd
 from src.utils.data_handlers import (
     get_daily_data,
     validate_data,
@@ -62,7 +63,6 @@ def main():
         else:
             print(f"\nData for {stock} already exists. Loading from CSV...")
         
-
         """Validate that user has used valid stock ticker that exists"""
         validate_data(data, stock)
         

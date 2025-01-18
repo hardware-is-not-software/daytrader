@@ -30,7 +30,7 @@ def load_from_csv(stock, filename=None):
         filename = get_csv_filename(stock)
     filepath = f'results/{stock}/{filename}'
     if os.path.exists(filepath):
-        return pd.read_csv(filepath, index_col=0, parse_dates=True)
+        return pd.read_csv(filepath, index_col=0, parse_dates=True, header=0)
     return None
 
 def get_csv_filename(ticker):
@@ -66,4 +66,4 @@ def validate_data(data, stock):
     if missing_columns:
         print(f"\nError: Missing required columns in data: {missing_columns}")
         print("Please delete the CSV file and try again to fetch fresh data.")
-        sys.exit(1) 
+        sys.exit(1)

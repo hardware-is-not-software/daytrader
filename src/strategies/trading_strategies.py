@@ -21,6 +21,7 @@ def run_monthly_dca_strategy(data, monthly_investment=1000, max_investment=10000
         })
         
         # Check if this is the first trading day of a new month
+        index = pd.to_datetime(index)
         if current_month != index.month:
             current_month = index.month
             
@@ -139,4 +140,4 @@ def run_buy_and_hold_strategy(data, investment_amount=10000, tradecost=0.15):
     final_value = shares * df['Close'].iloc[-1]
     print(f"Buy & Hold: {df.index[0].date()}, Price: ${initial_price:.2f}, Shares: {shares:.2f}")
     
-    return pd.DataFrame(trades), final_value, pd.DataFrame(portfolio_values) 
+    return pd.DataFrame(trades), final_value, pd.DataFrame(portfolio_values)
