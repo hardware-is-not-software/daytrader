@@ -26,6 +26,7 @@ from src.visualization.plotting import (
     create_strategy_comparison_plot
 )
 from src.analysis.results_handler import store_analysis_results
+from src.utils.ticker_utils import get_company_name
 
 def main():
     parser = argparse.ArgumentParser(description='Stock trading strategy analysis')
@@ -125,20 +126,21 @@ def main():
         
         # Create plots
         print("\nGenerating plots...")
+        company_name = get_company_name(stock)
         create_3d_strategy_plot(
             results, bh_final, dca_final,
-            stock, args.stoploss, args.tradecost
+            stock, args.stoploss, args.tradecost, company_name
         )
         
         create_strategy_comparison_plot(
             optimized_values, worst_values, dca_values, bh_values,
             optimized_trades, dca_trades,
             stock, args.stoploss, args.tradecost,
-            int(best_days), best_buy, best_sell
+            int(best_days), best_buy, best_sell, company_name
         )
-        
         # Store analysis results
-        store_analysis_results(args, dca_final, dca_values, dip_final, dip_values, bh_final, bh_values, best_value, best_buy, best_sell, best_days, optimized_trades, dip_trades, bh_trades, dca_trades, stock)
+        company_name = get_company_name(stock)
+        store_analysis_results(args, dca_final, dca_values, dip_final, dip_values, bh_final, bh_values, best_value, best_buy, best_sell, best_days, optimized_trades, dip_trades, bh_trades, dca_trades, stock, company_name)
         print(f"\nAnalysis complete. Check the 'results/{stock}' directory for visualizations and data.")
     elif args.stocklist:
         print(f"\nLoading stock list from {args.stocklist}...")
@@ -245,7 +247,8 @@ def main():
             )
             
             # Store analysis results
-            store_analysis_results(args, dca_final, dca_values, dip_final, dip_values, bh_final, bh_values, best_value, best_buy, best_sell, best_days, optimized_trades, dip_trades, bh_trades, dca_trades, stock)
+            company_name = get_company_name(stock)
+            store_analysis_results(args, dca_final, dca_values, dip_final, dip_values, bh_final, bh_values, best_value, best_buy, best_sell, best_days, optimized_trades, dip_trades, bh_trades, dca_trades, stock, company_name)
             print(f"\nAnalysis complete. Check the 'results/{stock}' directory for visualizations and data.")
     else:
         print("Please provide a ticker using --ticker or a stock list using --stocklist")

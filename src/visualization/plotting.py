@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 
-def create_3d_strategy_plot(results, buyhold_final, dca_final, stock, stoploss, tradecost):
+def create_3d_strategy_plot(results, buyhold_final, dca_final, stock, stoploss, tradecost, company_name):
     """Create 3D visualization of strategy performance"""
     # Create stock-specific results directory if it doesn't exist
     os.makedirs(f'results/{stock}', exist_ok=True)
@@ -79,7 +79,7 @@ def create_3d_strategy_plot(results, buyhold_final, dca_final, stock, stoploss, 
     ax.set_xlabel('Buy Trigger (%)', labelpad=10)
     ax.set_ylabel('Sell Trigger (%)', labelpad=10)
     ax.set_zlabel('Final Value ($)', labelpad=10)
-    ax.set_title(f'\nStrategy Performance Comparison - {stock}\n({abs(stoploss)}% Stop Loss, {tradecost}% Trading Cost)', 
+    ax.set_title(f'\nStrategy Performance Comparison - {company_name} ({stock})\n({abs(stoploss)}% Stop Loss, {tradecost}% Trading Cost)', 
                 pad=40, size=14)
     
     # Rotate the view for better visualization
@@ -94,7 +94,7 @@ def create_3d_strategy_plot(results, buyhold_final, dca_final, stock, stoploss, 
 
 def create_strategy_comparison_plot(optimized_values, worst_values, dca_values, hold_values, 
                                   optimized_trades, dca_trades, stock, stoploss, tradecost,
-                                  best_days, best_buy, best_sell):
+                                  best_days, best_buy, best_sell, company_name):
     """Create time-domain comparison plot of different strategies"""
     # Create stock-specific results directory if it doesn't exist
     os.makedirs(f'results/{stock}', exist_ok=True)
@@ -132,7 +132,7 @@ def create_strategy_comparison_plot(optimized_values, worst_values, dca_values, 
         plt.scatter(dca_trades['date'], dca_trades['portfolio_value'], 
                    color='green', marker='*', s=100, label='DCA Buy', zorder=5)
     
-    plt.title(f'{stock} Strategy Comparison\nStop Loss: {stoploss}% | Trading Cost: {tradecost}%')
+    plt.title(f'{company_name} ({stock}) Strategy Comparison\nStop Loss: {stoploss}% | Trading Cost: {tradecost}%')
     plt.xlabel('Date')
     plt.ylabel('Portfolio Value ($)')
     plt.legend()
@@ -141,4 +141,4 @@ def create_strategy_comparison_plot(optimized_values, worst_values, dca_values, 
     plt.tight_layout()
     
     plt.savefig(f'results/{stock}/strategy_timedomain_{stock}.png')
-    plt.close() 
+    plt.close()
