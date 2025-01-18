@@ -1,5 +1,6 @@
 from src.utils.data_handlers import store_facts_to_file
 from src.analysis.strategy_analysis import calculate_max_drawdown
+from src.utils.ticker_utils import get_company_name
 
 def store_analysis_results(args, dca_final, dca_values, dip_final, dip_values, bh_final, bh_values, best_value, best_buy, best_sell, best_days, optimized_trades, dip_trades, bh_trades, dca_trades, stock):
     facts = {
@@ -26,6 +27,7 @@ def store_analysis_results(args, dca_final, dca_values, dip_final, dip_values, b
                 "sell_trigger": best_sell,
                 "days_window": int(best_days)
             }
-        }
+        },
+        "company_name": get_company_name(stock)
     }
     store_facts_to_file(facts, stock)
