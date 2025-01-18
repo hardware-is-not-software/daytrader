@@ -38,8 +38,8 @@ def main():
     args = parser.parse_args()
     
     # Create plots directory if it doesn't exist
-    if not os.path.exists('plots'):
-        os.makedirs('plots')
+    if not os.path.exists('results'):
+        os.makedirs('results')
     
     # Create stock-specific results directory
     ensure_stock_dir(args.stock)
@@ -47,8 +47,14 @@ def main():
     # Load or fetch data
     data = load_from_csv(args.stock)
     if data is None:
+        print(f"\nFetching data for {args.stock} from Yahoo Finance...")
         data = get_daily_data(args.stock)
         save_to_csv(data, args.stock)
+    else:
+        print(f"\nData for {args.stock} already exists. Loading from CSV...")
+
+
+    
     
     validate_data(data, args.stock)
     

@@ -8,17 +8,16 @@ This document helps AI assistants understand the structure and functionality of 
 daytrader/
 ├── src/
 │   ├── utils/
-│   │   ├── __init__.py
 │   │   └── data_handlers.py      # Data loading and validation functions
 │   ├── strategies/
-│   │   ├── __init__.py
 │   │   └── trading_strategies.py # Trading strategy implementations
 │   ├── analysis/
-│   │   ├── __init__.py
 │   │   └── strategy_analysis.py  # Analysis and optimization functions
-│   └── __init__.py
+│   ├── visualization/
+│   │   └── plotting.py  # Plotting functions
 ├── daytrader.py                  # Main entry point
 └── README_AI.md                  # This file
+└── README.md                     # Readme file for humans
 ```
 
 ## Module Functions
