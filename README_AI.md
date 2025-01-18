@@ -42,7 +42,7 @@ daytrader/
 - `create_3d_analysis(data, trigger_resolution, max_buytrigger, max_selltrigger)`: Analyze strategy performance across parameters
 
 ### analysis/results_handler.py
-- `store_analysis_results(args, dca_final, dca_values, dip_final, dip_values, bh_final, bh_values, best_value, best_buy, best_sell, best_days, optimized_trades, dip_trades, bh_trades)`: Stores analysis results to a JSON file.
+- `store_analysis_results(args, dca_final, dca_values, dip_final, dip_values, bh_final, bh_values, best_value, best_buy, best_sell, best_days, optimized_trades, dip_trades, bh_trades, dca_trades, stock)`: Stores analysis results to a JSON file.
 
 ## Common Parameters
 - `data`: Pandas DataFrame with columns ['Open', 'High', 'Low', 'Close', 'Volume']
@@ -53,8 +53,9 @@ daytrader/
 
 ## Main Script (daytrader.py)
 The main script orchestrates the analysis by:
-1. Loading or fetching stock data
+1. Loading or fetching stock data (or list of stocks)
 2. Running different trading strategies
 3. Analyzing strategy performance
 4. Finding optimal parameters
 5. Displaying results
+6. Accepts --ticker for single stock analysis or --stocklist for list of stocks

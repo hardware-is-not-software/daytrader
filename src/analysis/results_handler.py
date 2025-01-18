@@ -1,7 +1,7 @@
 from src.utils.data_handlers import store_facts_to_file
 from src.analysis.strategy_analysis import calculate_max_drawdown
 
-def store_analysis_results(args, dca_final, dca_values, dip_final, dip_values, bh_final, bh_values, best_value, best_buy, best_sell, best_days, optimized_trades, dip_trades, bh_trades, dca_trades):
+def store_analysis_results(args, dca_final, dca_values, dip_final, dip_values, bh_final, bh_values, best_value, best_buy, best_sell, best_days, optimized_trades, dip_trades, bh_trades, dca_trades, stock):
     facts = {
         "parameters": vars(args),
         "strategy_results": {
@@ -28,4 +28,4 @@ def store_analysis_results(args, dca_final, dca_values, dip_final, dip_values, b
             }
         }
     }
-    store_facts_to_file(facts, args.stock)
+    store_facts_to_file(facts, stock)
