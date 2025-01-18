@@ -13,6 +13,7 @@ daytrader/
 │   │   └── trading_strategies.py # Trading strategy implementations
 │   ├── analysis/
 │   │   └── strategy_analysis.py  # Analysis and optimization functions
+│   │   └── results_handler.py # Handles storing analysis results
 │   ├── visualization/
 │   │   └── plotting.py  # Plotting functions
 ├── daytrader.py                  # Main entry point
@@ -40,6 +41,9 @@ daytrader/
 - `run_strategy_with_parameters(data, buy_trigger, sell_trigger, days_window, investment_amount, trading_cost)`: Test strategy with specific parameters
 - `create_3d_analysis(data, trigger_resolution, max_buytrigger, max_selltrigger)`: Analyze strategy performance across parameters
 
+### analysis/results_handler.py
+- `store_analysis_results(args, dca_final, dca_values, dip_final, dip_values, bh_final, bh_values, best_value, best_buy, best_sell, best_days, optimized_trades, dip_trades, bh_trades)`: Stores analysis results to a JSON file.
+
 ## Common Parameters
 - `data`: Pandas DataFrame with columns ['Open', 'High', 'Low', 'Close', 'Volume']
 - `tradecost`: Trading cost as percentage (e.g., 0.15 for 0.15%)
@@ -53,4 +57,4 @@ The main script orchestrates the analysis by:
 2. Running different trading strategies
 3. Analyzing strategy performance
 4. Finding optimal parameters
-5. Displaying results 
+5. Displaying results
