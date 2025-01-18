@@ -5,16 +5,32 @@ import yfinance as yf
 from datetime import datetime, timedelta
 import sys
 
-def store_facts_to_file(facts, filename='facts.json'):
-    with open(filename, 'w') as f:
+def ensure_stock_dir(stock):
+    """Ensure the stock-specific results directory exists"""
+    os.makedirs(f'results/{stock}', exist_ok=True)
+
+def store_facts_to_file(facts, stock, filename='stock.json'):
+    """Store facts in stock-specific directory"""
+    ensure_stock_dir(stock)
+    filepath = f'results/{stock}/{filename}'
+    with open(filepath, 'w') as f:
         json.dump(facts, f, indent=4)
 
-def save_to_csv(data, filename='stock_data.csv'):
-    data.to_csv(filename)
+def save_to_csv(data, stock, filename=None):
+    """Save data to CSV in stock-specific directory"""
+    ensure_stock_dir(stock)
+    if filename is None:
+        filename = get_csv_filename(stock)
+    filepath = f'results/{stock}/{filename}'
+    data.to_csv(filepath)
 
-def load_from_csv(filename='stock_data.csv'):
-    if os.path.exists(filename):
-        return pd.read_csv(filename, index_col=0, parse_dates=True)
+def load_from_csv(stock, filename=None):
+    """Load CSV from stock-specific directory"""
+    if filename is None:
+        filename = get_csv_filename(stock)
+    filepath = f'results/{stock}/{filename}'
+    if os.path.exists(filepath):
+        return pd.read_csv(filepath, index_col=0, parse_dates=True)
     return None
 
 def get_csv_filename(ticker):

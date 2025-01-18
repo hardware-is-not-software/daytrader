@@ -7,7 +7,8 @@ from src.utils.data_handlers import (
     get_csv_filename,
     load_from_csv,
     save_to_csv,
-    store_facts_to_file
+    store_facts_to_file,
+    ensure_stock_dir
 )
 from src.strategies.trading_strategies import (
     run_monthly_dca_strategy,
@@ -40,12 +41,14 @@ def main():
     if not os.path.exists('plots'):
         os.makedirs('plots')
     
+    # Create stock-specific results directory
+    ensure_stock_dir(args.stock)
+    
     # Load or fetch data
-    csv_filename = get_csv_filename(args.stock)
-    data = load_from_csv(csv_filename)
+    data = load_from_csv(args.stock)
     if data is None:
         data = get_daily_data(args.stock)
-        save_to_csv(data, csv_filename)
+        save_to_csv(data, args.stock)
     
     validate_data(data, args.stock)
     
@@ -147,8 +150,8 @@ def main():
             }
         }
     }
-    store_facts_to_file(facts)
-    print("\nAnalysis complete. Check the 'plots' directory for visualizations.")
+    store_facts_to_file(facts, args.stock)
+    print(f"\nAnalysis complete. Check the 'results/{args.stock}' directory for visualizations and data.")
 
 if __name__ == "__main__":
     main()

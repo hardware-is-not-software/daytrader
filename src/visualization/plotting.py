@@ -1,9 +1,12 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 
 def create_3d_strategy_plot(results, buyhold_final, dca_final, stock, stoploss, tradecost):
     """Create 3D visualization of strategy performance"""
-    # Create plots directory if it doesn't exist
+    # Create stock-specific results directory if it doesn't exist
+    os.makedirs(f'results/{stock}', exist_ok=True)
+    
     plt.figure(figsize=(15, 10))
     ax = plt.axes(projection='3d')
     
@@ -86,13 +89,16 @@ def create_3d_strategy_plot(results, buyhold_final, dca_final, stock, stoploss, 
     ax.legend(title='Drop Window Duration')
     
     plt.tight_layout()
-    plt.savefig(f'plots/strategy_3d_{stock}.png')
+    plt.savefig(f'results/{stock}/strategy_3d_{stock}.png')
     plt.close()
 
 def create_strategy_comparison_plot(optimized_values, worst_values, dca_values, hold_values, 
                                   optimized_trades, dca_trades, stock, stoploss, tradecost,
                                   best_days, best_buy, best_sell):
     """Create time-domain comparison plot of different strategies"""
+    # Create stock-specific results directory if it doesn't exist
+    os.makedirs(f'results/{stock}', exist_ok=True)
+    
     plt.figure(figsize=(15, 7))
     
     # Plot strategy values over time
@@ -134,5 +140,5 @@ def create_strategy_comparison_plot(optimized_values, worst_values, dca_values, 
     plt.xticks(rotation=45)
     plt.tight_layout()
     
-    plt.savefig(f'plots/strategy_timedomain_{stock}.png')
+    plt.savefig(f'results/{stock}/strategy_timedomain_{stock}.png')
     plt.close() 
