@@ -1,1 +1,1 @@
-No special instructions yet
+Read README_AI.md
