@@ -140,7 +140,11 @@ def main():
         )
         # Store analysis results
         company_name = get_company_name(stock)
-        store_analysis_results(args, dca_final, dca_values, dip_final, dip_values, bh_final, bh_values, best_value, best_buy, best_sell, best_days, optimized_trades, dip_trades, bh_trades, dca_trades, stock, company_name)
+        store_analysis_results(args, dca_final, dca_values, dip_final, dip_values, bh_final, bh_values, 
+                              best_value, best_buy, best_sell, best_days,
+                              worst_value, worst_buy, worst_sell, worst_days,
+                              optimized_trades, dip_trades, bh_trades, dca_trades, 
+                              stock, company_name)
         print(f"\nAnalysis complete. Check the 'results/{stock}' directory for visualizations and data.")
     elif args.stocklist:
         print(f"\nLoading stock list from {args.stocklist}...")
@@ -249,8 +253,12 @@ def main():
             
             # Store analysis results
             company_name = get_company_name(stock)
-            store_analysis_results(args, dca_final, dca_values, dip_final, dip_values, bh_final, bh_values, best_value, best_buy, best_sell, best_days, optimized_trades, dip_trades, bh_trades, dca_trades, stock, company_name)
-        print(f"\nAnalysis complete. Check the 'results/' directory for visualizations and data.")
+            store_analysis_results(args, dca_final, dca_values, dip_final, dip_values, bh_final, bh_values, 
+                                  best_value, best_buy, best_sell, best_days,
+                                  worst_value, worst_buy, worst_sell, worst_days,
+                                  optimized_trades, dip_trades, bh_trades, dca_trades, 
+                                  stock, company_name)
+            print(f"\nAnalysis complete. Check the 'results/' directory for visualizations and data.")
     
     else:
         print("Please provide a ticker using --ticker or a stock list using --stocklist")
