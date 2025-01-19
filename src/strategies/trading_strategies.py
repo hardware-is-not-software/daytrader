@@ -50,10 +50,16 @@ def run_monthly_dca_strategy(data, monthly_investment=1000, max_investment=10000
     final_value = shares * df['Close'].iloc[-1]
     return pd.DataFrame(trades), final_value, pd.DataFrame(portfolio_values)
 
-def run_dip_recovery_strategy(data, investment_amount=10000, tradecost=0.15):
+def run_dip_recovery_strategy(data, buy_trigger=-2.0, sell_trigger=0.0, days_window=1, investment_amount=10000, tradecost=0.15):
     df = data.copy()
     df['daily_open'] = df['Open']
-    df['intraday_return'] = ((df['Close'] - df['Open']) / df['Open']) * 100
+    
+    # Calculate returns over the specified window
+    if days_window > 1:
+        df['window_open'] = df['Open'].shift(days_window - 1)
+        df['intraday_return'] = ((df['Close'] - df['window_open']) / df['window_open']) * 100
+    else:
+        df['intraday_return'] = ((df['Close'] - df['Open']) / df['Open']) * 100
     
     cash = investment_amount
     shares = 0
@@ -70,14 +76,14 @@ def run_dip_recovery_strategy(data, investment_amount=10000, tradecost=0.15):
             'value': current_value
         })
         
-        # Buy condition: 2% drop from daily open
-        if shares == 0 and row['intraday_return'] <= -2:
+        # Buy condition: drop exceeds buy trigger
+        if shares == 0 and row['intraday_return'] <= buy_trigger:
             trading_cost = investment_amount * (tradecost / 100)
             shares_to_buy = (investment_amount - trading_cost) / current_price
             if shares_to_buy > 0:
                 shares = shares_to_buy
                 cash -= (shares * current_price + trading_cost)
-                entry_price = row['Open']
+                entry_price = row['window_open'] if days_window > 1 else row['Open']
                 trades.append({
                     'date': index,
                     'action': 'BUY',
@@ -89,24 +95,26 @@ def run_dip_recovery_strategy(data, investment_amount=10000, tradecost=0.15):
                 })
                 print(f"BUY: {index.date()}, Price: ${current_price:.2f}, Drop: {row['intraday_return']:.1f}%, Cost: ${trading_cost:.2f}")
         
-        # Sell condition: price recovered to or above entry price
-        elif shares > 0 and current_price >= entry_price:
-            sell_value = shares * current_price
-            trading_cost = sell_value * (tradecost / 100)
-            profit = (current_price - entry_price) * shares - trading_cost
-            cash += (sell_value - trading_cost)
-            trades.append({
-                'date': index,
-                'action': 'SELL',
-                'price': current_price,
-                'shares': shares,
-                'value': cash,
-                'trading_cost': trading_cost,
-                'profit': profit
-            })
-            print(f"SELL: {index.date()}, Price: ${current_price:.2f}, Profit: ${profit:.2f}, Cost: ${trading_cost:.2f}")
-            shares = 0
-            entry_price = None
+        # Sell condition: price recovered by sell trigger percentage
+        elif shares > 0:
+            price_change = ((current_price - entry_price) / entry_price) * 100
+            if price_change >= sell_trigger:
+                sell_value = shares * current_price
+                trading_cost = sell_value * (tradecost / 100)
+                profit = (current_price - entry_price) * shares - trading_cost
+                cash += (sell_value - trading_cost)
+                trades.append({
+                    'date': index,
+                    'action': 'SELL',
+                    'price': current_price,
+                    'shares': shares,
+                    'value': cash,
+                    'trading_cost': trading_cost,
+                    'profit': profit
+                })
+                print(f"SELL: {index.date()}, Price: ${current_price:.2f}, Profit: ${profit:.2f}, Cost: ${trading_cost:.2f}")
+                shares = 0
+                entry_price = None
     
     final_value = cash + (shares * df['Close'].iloc[-1])
     return pd.DataFrame(trades), final_value, pd.DataFrame(portfolio_values)

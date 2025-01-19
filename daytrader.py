@@ -73,11 +73,6 @@ def main():
         print(f"Final Portfolio Value: ${dca_final:.2f}")
         print(f"Max Drawdown: {calculate_max_drawdown(dca_values['value']):.1f}%")
         
-        print("\nRunning Dip Recovery Strategy...")
-        dip_trades, dip_final, dip_values = run_dip_recovery_strategy(data, tradecost=args.tradecost)
-        print(f"Final Portfolio Value: ${dip_final:.2f}")
-        print(f"Max Drawdown: {calculate_max_drawdown(dip_values['value']):.1f}%")
-        
         print("\nRunning Buy & Hold Strategy...")
         bh_trades, bh_final, bh_values = run_buy_and_hold_strategy(data, tradecost=args.tradecost)
         print(f"Final Portfolio Value: ${bh_final:.2f}")
@@ -112,16 +107,30 @@ def main():
         worst_days = results[worst_idx, 3]
         worst_value = results[worst_idx, 2]
         
-        # Run optimized strategy
-        print("\nRunning Optimized Strategy...")
+        print(f"\nWorst Parameters Found:")
+        print(f"Buy Trigger: {worst_buy:.1f}%")
+        print(f"Sell Trigger: {worst_sell:.1f}%")
+        print(f"Days Window: {int(worst_days)}")
+        print(f"Final Value: ${worst_value:.2f}")
+        
+        # Run best dip strategy
+        print("\nRunning Best Dip Strategy...")
         optimized_trades, optimized_final, optimized_values = run_dip_recovery_strategy(
-            data, tradecost=args.tradecost
+            data, 
+            buy_trigger=best_buy,
+            sell_trigger=best_sell,
+            days_window=int(best_days),
+            tradecost=args.tradecost
         )
         
-        # Run worst strategy
-        print("\nRunning Worst Strategy...")
+        # Run worst dip strategy
+        print("\nRunning Worst Dip Strategy...")
         worst_trades, worst_final, worst_values = run_dip_recovery_strategy(
-            data, tradecost=args.tradecost
+            data,
+            buy_trigger=worst_buy,
+            sell_trigger=worst_sell,
+            days_window=int(worst_days),
+            tradecost=args.tradecost
         )
         
         # Create plots
@@ -140,10 +149,10 @@ def main():
         )
         # Store analysis results
         company_name = get_company_name(stock)
-        store_analysis_results(args, dca_final, dca_values, dip_final, dip_values, bh_final, bh_values, 
+        store_analysis_results(args, dca_final, dca_values, optimized_final, optimized_values, bh_final, bh_values, 
                               best_value, best_buy, best_sell, best_days,
                               worst_value, worst_buy, worst_sell, worst_days,
-                              optimized_trades, dip_trades, bh_trades, dca_trades, 
+                              optimized_trades, worst_trades, bh_trades, dca_trades, 
                               stock, company_name)
         print(f"\nAnalysis complete. Check the 'results/{stock}' directory for visualizations and data.")
     elif args.stocklist:
@@ -185,11 +194,6 @@ def main():
             print(f"Final Portfolio Value: ${dca_final:.2f}")
             print(f"Max Drawdown: {calculate_max_drawdown(dca_values['value']):.1f}%")
             
-            print("\nRunning Dip Recovery Strategy...")
-            dip_trades, dip_final, dip_values = run_dip_recovery_strategy(data, tradecost=args.tradecost)
-            print(f"Final Portfolio Value: ${dip_final:.2f}")
-            print(f"Max Drawdown: {calculate_max_drawdown(dip_values['value']):.1f}%")
-            
             print("\nRunning Buy & Hold Strategy...")
             bh_trades, bh_final, bh_values = run_buy_and_hold_strategy(data, tradecost=args.tradecost)
             print(f"Final Portfolio Value: ${bh_final:.2f}")
@@ -224,16 +228,30 @@ def main():
             worst_days = results[worst_idx, 3]
             worst_value = results[worst_idx, 2]
             
-            # Run optimized strategy
-            print("\nRunning Optimized Strategy...")
+            print(f"\nWorst Parameters Found:")
+            print(f"Buy Trigger: {worst_buy:.1f}%")
+            print(f"Sell Trigger: {worst_sell:.1f}%")
+            print(f"Days Window: {int(worst_days)}")
+            print(f"Final Value: ${worst_value:.2f}")
+            
+            # Run best dip strategy
+            print("\nRunning Best Dip Strategy...")
             optimized_trades, optimized_final, optimized_values = run_dip_recovery_strategy(
-                data, tradecost=args.tradecost
+                data, 
+                buy_trigger=best_buy,
+                sell_trigger=best_sell,
+                days_window=int(best_days),
+                tradecost=args.tradecost
             )
             
-            # Run worst strategy
-            print("\nRunning Worst Strategy...")
+            # Run worst dip strategy
+            print("\nRunning Worst Dip Strategy...")
             worst_trades, worst_final, worst_values = run_dip_recovery_strategy(
-                data, tradecost=args.tradecost
+                data,
+                buy_trigger=worst_buy,
+                sell_trigger=worst_sell,
+                days_window=int(worst_days),
+                tradecost=args.tradecost
             )
             
             # Create plots
@@ -253,10 +271,10 @@ def main():
             
             # Store analysis results
             company_name = get_company_name(stock)
-            store_analysis_results(args, dca_final, dca_values, dip_final, dip_values, bh_final, bh_values, 
+            store_analysis_results(args, dca_final, dca_values, optimized_final, optimized_values, bh_final, bh_values, 
                                   best_value, best_buy, best_sell, best_days,
                                   worst_value, worst_buy, worst_sell, worst_days,
-                                  optimized_trades, dip_trades, bh_trades, dca_trades, 
+                                  optimized_trades, worst_trades, bh_trades, dca_trades, 
                                   stock, company_name)
             print(f"\nAnalysis complete. Check the 'results/' directory for visualizations and data.")
     
