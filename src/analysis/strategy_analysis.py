@@ -22,10 +22,22 @@ def run_strategy_with_parameters(data, buy_trigger, sell_trigger, days_window=1,
         
         # Buy condition: specified drop over the last n days
         if shares == 0 and not pd.isna(row['price_change']) and row['price_change'] <= buy_trigger:
-            shares_to_buy = (investment_amount - trading_cost) / current_price
+            if buy_trigger==-5.0 and days_window==4 and sell_trigger==5:
+                print(f"Price change: {row['price_change']:.2f}")
+                print(f"Buy trigger: {buy_trigger:.2f}")
+                print(f"investment_amount: {investment_amount:.2f}")
+                print(f"trading_cost: {trading_cost:.2f}")
+                print(f"Bcurrent_price: {current_price:.2f}")
+                print(f"Date: {index}")
+                print(f"Current: {df['Close'][index]}")
+                print(f"Current4: {df['Close'].shift(days_window)[index]}")
+            shares_to_buy = (cash - trading_cost) / current_price
             if shares_to_buy > 0:
                 shares = shares_to_buy
                 cash -= (shares * current_price + trading_cost)
+                if buy_trigger==-5.0 and days_window==4 and sell_trigger==5:
+                    print(f"shares_to_buy: {shares_to_buy:.2f}")
+                    print(f"cash: {cash:.2f}")
                 entry_price = current_price
         
         # Sell conditions: target reached or stop loss hit
@@ -35,6 +47,12 @@ def run_strategy_with_parameters(data, buy_trigger, sell_trigger, days_window=1,
                 cash += (shares * current_price - trading_cost)
                 shares = 0
                 entry_price = None
+                if buy_trigger==-5.0 and days_window==4 and sell_trigger==5:
+                    print(f"Date: {index}")
+                    print(f"current_return: {current_return:.2f}")
+                    print(f"sell_trigger: {sell_trigger:.2f}")
+                    print(f"cash: {cash:.2f}")
+                    print(f"shares: {shares:.2f}")
     
     final_value = cash + (shares * df['Close'].iloc[-1])
     return final_value
@@ -52,4 +70,4 @@ def create_3d_analysis(data, trigger_resolution=0.5, max_buytrigger=5, max_sellt
                 final_value = run_strategy_with_parameters(data, buy, sell, days)
                 results.append([buy, sell, final_value, days])
     
-    return np.array(results) 
+    return np.array(results)
